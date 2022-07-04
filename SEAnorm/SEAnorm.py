@@ -2,7 +2,13 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 from scipy import stats
+import matplotlib.pylab as plt
+import matplotlib as mpl
+import datetime
+from datetime import timedelta
+import os
 import gc
+
 
 
 def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
@@ -19,9 +25,9 @@ def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
     y_dimensions - required only for 2D histograms
                  - list [x, y, z] containing the min, max and desired bin spacing in the y-dimension
     """
-    if len(data.columns)==2:
+    if isinstance(data, pd.core.frame.DataFrame)==True: # 2D SEA
         starts, epochs, ends = events
-        x1_spacing, x2_spacing = 1/x_dimensions
+        x1_spacing, x2_spacing = 1/x_dimensions[0], 1/x_dimensions[1]
         ymin, ymax, y_spacing = y_dimensions
 
         eventno = 0  # for reference later on
@@ -99,12 +105,9 @@ def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
 
         # concatenate phases to make final superposed epoch analysis
         SEAarray = np.concatenate((p1, p2), axis=0)
-    elif len(data.columns)>2:
-        print('Incorrect number of data inputs. Time series required for 1D SEA and [data, yvals] required for 2D SEA')
-        return
-    else:
+    elif isinstance(data, pd.core.series.Series)==True:  # 1D SEA
         starts, epochs, ends = events
-        x1_spacing, x2_spacing = 1/x_dimensions
+        x1_spacing, x2_spacing = 1/x_dimensions[0], 1/x_dimensions[1]
 
         data.to_frame('data')  # changes time series into a data frame
 
@@ -179,24 +182,28 @@ def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
 
         # concatenate phases to make final superposed epoch analysis
         SEAarray = np.concatenate((p1, p2), axis=0)
-
+    else:
+        print('Incorrect data input.\nFor 1D SEA, input pandas Series.\nFor 2D SEA, input pandas DataFrame with one data column and one y-data column.\nAny input must have a pandas datetime index.')
+        return
     return SEAarray
 
 ############################################################################################################
 # parameters
 ############################################################################################################
 
-x_spacing = 6  # time resolution in normalised hours or absolute hours (depending on taxis)
+x1_bins = 4
+x2_bins = 24
 
-ymin = 2.5  # minimum Lstar
-ymax = 5.5  # maximum Lstar
-y_spacing = 0.5  # Lstar resolution
+ymin = 2.5
+ymax = 5.5
+y_spacing = 0.5
 
 
 ############################################################################################################
 # run
 ############################################################################################################
-alldata = pd.read_pickle('alldata')
+sampexdata = pd.read_pickle('sampexdata')
+alldata=sampexdata[['ELO', 'L']]
 
 stormlistall = pd.read_csv('/Users/samuelwalton/Documents/PhD/Code/RBSP/WalachList_ordered.txt', index_col=0, parse_dates=[1, 2, 3, 4])
 stormlist = stormlistall.reset_index(drop=True)
@@ -205,4 +212,14 @@ epochs = stormlist.RStart.dt.strftime('%Y-%m-%d %H:%M:%S')
 ends = stormlist.REnd
 
 events=[starts, epochs, ends]
-data=alldata[['ELO', 'L']]
+data=alldata['ELO']
+statistic=50
+x_dimensions=[x1_bins, x2_bins]
+
+print('Data is ready. Beginning SEA function')
+final=SEA(data, events, statistic, x_dimensions)
+
+plt.plot(final)
+plt.yscale('log')
+plt.show()
+
