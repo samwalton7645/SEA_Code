@@ -72,19 +72,20 @@ def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
             p2zdata = phase2.iloc[:, 0]
 
             # create bins and edges for histogram
-            xbins = np.arange(0, 1, x1_spacing)
-            ybins = np.arange(min_y, max_y, y_spacing)
+            x1bins = np.arange(0, 1, x1_spacing)
+            x2bins = np.arange(0, 1, x2_spacing)
+            ybins = np.arange(ymin, ymax, y_spacing)
             x1_edges = np.arange(0, 1 + x1_spacing, x1_spacing)
             x2_edges = np.arange(0, 1 + x2_spacing, x2_spacing)
-            y_edges = np.arange(min_y, max_y + y_spacing, y_spacing)
+            y_edges = np.arange(ymin, ymax + y_spacing, y_spacing)
 
             try:
                 p1array, _, _, _ = stats.binned_statistic_2d(p1xdata, p1ydata, values=p1zdata, bins=[x1_edges, y_edges], statistic=lambda stat: np.nanpercentile(stat, 50))
                 p2array, _, _, _ = stats.binned_statistic_2d(p2xdata, p2ydata, values=p2zdata, bins=[x2_edges, y_edges], statistic=lambda stat: np.nanpercentile(stat, 50))
             except ValueError:
-                p1array = np.zeros((xbins.shape[0], ybins.shape[0]))  # in case there is no data in any of the defined bins
+                p1array = np.zeros((x1bins.shape[0], ybins.shape[0]))  # in case there is no data in any of the defined bins
                 p1array[:] = np.nan
-                p2array = np.zeros((xbins.shape[0], ybins.shape[0]))
+                p2array = np.zeros((x2bins.shape[0], ybins.shape[0]))
                 p2array[:] = np.nan
 
             if eventno == 0:
@@ -93,7 +94,7 @@ def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
                 eventno = 'done'
             else:
                 p1all = np.dstack((p1all, p1array))
-                p2all = np.dstack((p2all, p1array))
+                p2all = np.dstack((p2all, p2array))
 
         # calculate statistic for phase 1 and 2 histograms
         if isinstance(statistic, int) == True:
@@ -105,11 +106,12 @@ def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
 
         # concatenate phases to make final superposed epoch analysis
         SEAarray = np.concatenate((p1, p2), axis=0)
+        SEAarray = np.flip(np.swapaxes(SEAarray, 0, 1), 0)
     elif isinstance(data, pd.core.series.Series)==True:  # 1D SEA
         starts, epochs, ends = events
         x1_spacing, x2_spacing = 1/x_dimensions[0], 1/x_dimensions[1]
 
-        data.to_frame('data')  # changes time series into a data frame
+        data=data.to_frame('data')  # changes time series into a data frame
 
         eventno = 0  # for reference later on
         gc.collect()
@@ -144,14 +146,15 @@ def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
             phase2['t_norm'] = ((phase2['t_norm'] - p2min) / (p2max - p2min))
 
             # assign x, y and z variables for histogram
-            p1xdata = phase1.iloc[:, 1]
-            p1ydata = phase1.iloc[:, 0]
+            p1xdata = phase1['t_norm']
+            p1ydata = phase1['data']
 
-            p2xdata = phase2.iloc[:, 1]
-            p2ydata = phase2.iloc[:, 0]
+            p2xdata = phase2['t_norm']
+            p2ydata = phase2['data']
 
             # create bins and edges for histogram
-            xbins = np.arange(0, 1, x1_spacing)
+            x1bins = np.arange(0, 1, x1_spacing)
+            x2bins = np.arange(0, 1, x2_spacing)
             x1_edges = np.arange(0, 1 + x1_spacing, x1_spacing)
             x2_edges = np.arange(0, 1 + x2_spacing, x2_spacing)
 
@@ -159,9 +162,9 @@ def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
                 p1array, _, _ = stats.binned_statistic(p1xdata, values=p1ydata, bins=x1_edges, statistic=lambda stat: np.nanpercentile(stat, 50))
                 p2array, _, _ = stats.binned_statistic(p2xdata, values=p2ydata, bins=x2_edges, statistic=lambda stat: np.nanpercentile(stat, 50))
             except ValueError:
-                p1array = np.zeros(len(xbins))
+                p1array = np.zeros(len(x1bins))
                 p1array[:] = np.nan
-                p2array = np.zeros(len(xbins))
+                p2array = np.zeros(len(x2bins))
                 p2array[:] = np.nan
 
             if eventno == 0:
@@ -170,7 +173,7 @@ def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
                 eventno = 'done'
             else:
                 p1all = np.vstack((p1all, p1array))
-                p2all = np.vstack((p2all, p1array))
+                p2all = np.vstack((p2all, p2array))
 
         # calculate statistic for phase 1 and 2 histograms
         if isinstance(statistic, int) == True:
@@ -194,32 +197,35 @@ def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
 x1_bins = 4
 x2_bins = 24
 
+x_dimensions=[x1_bins, x2_bins]
+
 ymin = 2.5
 ymax = 5.5
 y_spacing = 0.5
 
+y_dimensions=[ymin, ymax, y_spacing]
 
 ############################################################################################################
 # run
 ############################################################################################################
 sampexdata = pd.read_pickle('sampexdata')
 alldata=sampexdata[['ELO', 'L']]
+ldata=alldata[(alldata['L']>4.0) & (alldata['L']<4.5)]
+data=np.log10(ldata['ELO'])
+
 
 stormlistall = pd.read_csv('/Users/samuelwalton/Documents/PhD/Code/RBSP/WalachList_ordered.txt', index_col=0, parse_dates=[1, 2, 3, 4])
 stormlist = stormlistall.reset_index(drop=True)
-starts = stormlist.MStart
+starts = stormlist.IStart
 epochs = stormlist.RStart.dt.strftime('%Y-%m-%d %H:%M:%S')
 ends = stormlist.REnd
 
 events=[starts, epochs, ends]
-data=alldata['ELO']
 statistic=50
-x_dimensions=[x1_bins, x2_bins]
 
 print('Data is ready. Beginning SEA function')
-final=SEA(data, events, statistic, x_dimensions)
+final=SEA(alldata, events, statistic, x_dimensions, y_dimensions)
 
-plt.plot(final)
-plt.yscale('log')
+plt.imshow(np.log10(final))
 plt.show()
 
