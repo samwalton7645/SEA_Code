@@ -210,8 +210,8 @@ y_dimensions=[ymin, ymax, y_spacing]
 omnidata = pd.read_pickle('omnidata')
 data = omnidata['SymH']
 
-stormlistall = pd.read_csv('/Users/samuelwalton/Documents/PhD/Code/RBSP/WalachList_ordered.txt', index_col=0, parse_dates=[1, 2, 3, 4])
-stormlist = stormlistall.reset_index(drop=True)
+stormlist = pd.read_csv('WGStormList.txt', index_col=0, parse_dates=[1, 2, 3, 4])
+stormlist = stormlist.reset_index(drop=True)
 starts = stormlist.IStart
 epochs = stormlist.RStart.dt.strftime('%Y-%m-%d %H:%M:%S')
 ends = stormlist.REnd

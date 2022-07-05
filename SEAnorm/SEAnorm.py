@@ -4,7 +4,7 @@ import pandas as pd
 from scipy import stats
 import gc
 
-def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
+def SEAnorm(data, events, statistic, x_dimensions, y_dimensions='none'):
 
     """
     Arguments:
