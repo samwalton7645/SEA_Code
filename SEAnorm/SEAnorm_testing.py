@@ -2,10 +2,10 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 from scipy import stats
+import matplotlib.pylab as plt
 import gc
 
 def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
-
     """
     Arguments:
     data - Pandas time series containing time series to be used.
@@ -18,11 +18,7 @@ def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
     x_dimensions - list [x, y] containing two elements: the desired number of normalised time bins in [phase 1, phase 2]
     y_dimensions - required only for 2D histograms
                  - list [x, y, z] containing the min, max and desired bin spacing in the y-dimension
-
-    Returns:
-    1D or 2D numpy array containing the final time-normalised superposed epoch analysis.
     """
-
     if isinstance(data, pd.core.frame.DataFrame)==True: # 2D SEA
         starts, epochs, ends = events
         x1_spacing, x2_spacing = 1/x_dimensions[0], 1/x_dimensions[1]
@@ -187,4 +183,45 @@ def SEA(data, events, statistic, x_dimensions, y_dimensions='none'):
         print('Incorrect data input.\nFor 1D SEA, input pandas Series.\nFor 2D SEA, input pandas DataFrame with one data column and one y-data column.\nAny input must have a pandas datetime index.')
         return
     return SEAarray
+
+############################################################################################################
+# parameters
+############################################################################################################
+
+x1_bins = 10
+x2_bins = 100
+
+x_dimensions=[x1_bins, x2_bins]
+
+ymin = 2.5
+ymax = 5.5
+y_spacing = 0.5
+
+y_dimensions=[ymin, ymax, y_spacing]
+
+############################################################################################################
+# run
+############################################################################################################
+# sampexdata = pd.read_pickle('sampexdata')
+# alldata=sampexdata[['ELO', 'L']]
+# ldata=alldata[(alldata['L']>4.0) & (alldata['L']<4.5)]
+# data=np.log10(ldata['ELO'])
+
+omnidata = pd.read_pickle('omnidata')
+data = omnidata['SymH']
+
+stormlistall = pd.read_csv('/Users/samuelwalton/Documents/PhD/Code/RBSP/WalachList_ordered.txt', index_col=0, parse_dates=[1, 2, 3, 4])
+stormlist = stormlistall.reset_index(drop=True)
+starts = stormlist.IStart
+epochs = stormlist.RStart.dt.strftime('%Y-%m-%d %H:%M:%S')
+ends = stormlist.REnd
+
+events=[starts, epochs, ends]
+statistic=50
+
+print('Data is ready. Beginning SEA function')
+final=SEA(data, events, statistic, x_dimensions)
+
+plt.plot(final)
+plt.show()
 
