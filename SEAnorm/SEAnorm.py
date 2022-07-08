@@ -36,8 +36,8 @@ def SEAnorm(data, events, statistic, x_dimensions, y_dimensions='none'):
             epoch = str(epochs.iloc[event])
             end = str(ends.iloc[event])
 
-            phase1 = data[start:epoch]
-            phase2 = data[epoch:end]
+            phase1 = data[start:epoch].copy()
+            phase2 = data[epoch:end].copy()
 
             # normalise time axis of phase 1 for each phase from 0 to 1.
             try:
@@ -119,8 +119,8 @@ def SEAnorm(data, events, statistic, x_dimensions, y_dimensions='none'):
             epoch = str(epochs.iloc[event])
             end = str(ends.iloc[event])
 
-            phase1 = data[start:epoch]
-            phase2 = data[epoch:end]
+            phase1 = data[start:epoch].copy()
+            phase2 = data[epoch:end].copy()
 
             # normalise time axis of phase 1 for each phase from 0 to 1.
             try:
