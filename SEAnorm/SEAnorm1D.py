@@ -13,7 +13,7 @@ import gc
 
 import matplotlib.pylab as plt
 
-def SEAnorm1D(data, events, statistic, x_dimensions, cols=False):
+def SEAnorm1D(data, events, x_dimensions, cols=False):
 
     """Performs a normalized superposed epoch analysis of the time series
     contained in a a DataFrame
@@ -26,8 +26,6 @@ def SEAnorm1D(data, events, statistic, x_dimensions, cols=False):
            - times must either be timestamps or strings in the format: 'YYYY-MM-DD HH:MM:SS'
            - phase 1 is defined from t0->t1 (start to epoch)
            - phase 2 is defined from t1->t2 (epoch to end)
-    statistic - the statistical function to be used in the SEA (e.g. np.mean, np.median, np.sum, etc.)
-              - for percentiles, input an integer only
     x_dimensions - list [x, y] containing two elements: the desired number of normalised time bins in [phase 1, phase 2]
     
 
@@ -52,9 +50,12 @@ def SEAnorm1D(data, events, statistic, x_dimensions, cols=False):
     # determine what columns we're keeping for analysis
     # if cols is False keep them all
         se_data=data[cols].copy()
+        if isinstance(se_data, pd.Series):
+            se_data=se_data.to_frame(cols)
     else:
         se_data=data.copy()
-        cols = data.columns()
+        cols = se_data.columns.values.tolist()
+
     
     # number of events for reference later on
     eventno = 0  
@@ -132,35 +133,41 @@ def SEAnorm1D(data, events, statistic, x_dimensions, cols=False):
     
     # loop through columns and calculate
     # mean, median, upper and lower quartile
+    for column in p1data:
+        if column == 't_norm':
+            continue
     
-    p1mean, _, _ = stats.binned_statistic(p1data['t_norm'], values=p1data['data'], bins=x1_edges, statistic=lambda stat: np.nanmean(stat))
-    p1median, _, _ = stats.binned_statistic(p1data['t_norm'], values=p1data['data'], bins=x1_edges, statistic=lambda stat: np.nanpercentile(stat, 50))
-    p1lq, _, _ = stats.binned_statistic(p1data['t_norm'], values=p1data['data'], bins=x1_edges, statistic=lambda stat: np.nanpercentile(stat, 25))
-    p1uq, _, _ = stats.binned_statistic(p1data['t_norm'], values=p1data['data'], bins=x1_edges, statistic=lambda stat: np.nanpercentile(stat, 75))
-    p1c, _, _ = stats.binned_statistic(p1data['t_norm'], values=p1data['data'], bins=x1_edges, statistic='count')
-    
-    p2mean, _, _ = stats.binned_statistic(p2data['t_norm'], values=p2data['data'], bins=x2_edges, statistic=lambda stat: np.nanmean(stat))
-    p2median, _, _ = stats.binned_statistic(p2data['t_norm'], values=p2data['data'], bins=x2_edges, statistic=lambda stat: np.nanpercentile(stat, 50))
-    p2lq, _, _ = stats.binned_statistic(p2data['t_norm'], values=p2data['data'], bins=x2_edges, statistic=lambda stat: np.nanpercentile(stat, 25))
-    p2uq, _, _ = stats.binned_statistic(p2data['t_norm'], values=p2data['data'], bins=x2_edges, statistic=lambda stat: np.nanpercentile(stat, 75))
-    p2c, _, _ = stats.binned_statistic(p2data['t_norm'], values=p2data['data'], bins=x2_edges, statistic='count')
-    
-    SEAdat['mean'] = np.concatenate([p1mean,p2mean], axis=0)
-    SEAdat['median'] = np.concatenate([p1median,p2median], axis=0)
-    SEAdat['low_q'] = np.concatenate([p1lq,p2lq], axis=0)
-    SEAdat['up_q'] = np.concatenate([p1uq,p2uq],axis=0)
-    #SEAdat['cnt'] = np.concatenate([p1c,p2c],axis=0)
+        p1mean, _, _ = stats.binned_statistic(p1data['t_norm'], values=p1data[column], bins=x1_edges, statistic=lambda stat: np.nanmean(stat))
+        p1median, _, _ = stats.binned_statistic(p1data['t_norm'], values=p1data[column], bins=x1_edges, statistic=lambda stat: np.nanpercentile(stat, 50))
+        p1lq, _, _ = stats.binned_statistic(p1data['t_norm'], values=p1data[column], bins=x1_edges, statistic=lambda stat: np.nanpercentile(stat, 25))
+        p1uq, _, _ = stats.binned_statistic(p1data['t_norm'], values=p1data[column], bins=x1_edges, statistic=lambda stat: np.nanpercentile(stat, 75))
+        p1c, _, _ = stats.binned_statistic(p1data['t_norm'], values=p1data[column], bins=x1_edges, statistic='count')
+        
+        p2mean, _, _ = stats.binned_statistic(p2data['t_norm'], values=p2data[column], bins=x2_edges, statistic=lambda stat: np.nanmean(stat))
+        p2median, _, _ = stats.binned_statistic(p2data['t_norm'], values=p2data[column], bins=x2_edges, statistic=lambda stat: np.nanpercentile(stat, 50))
+        p2lq, _, _ = stats.binned_statistic(p2data['t_norm'], values=p2data[column], bins=x2_edges, statistic=lambda stat: np.nanpercentile(stat, 25))
+        p2uq, _, _ = stats.binned_statistic(p2data['t_norm'], values=p2data[column], bins=x2_edges, statistic=lambda stat: np.nanpercentile(stat, 75))
+        p2c, _, _ = stats.binned_statistic(p2data['t_norm'], values=p2data[column], bins=x2_edges, statistic='count')
+        
+        SEAdat[column+'_mean'] = np.concatenate([p1mean,p2mean], axis=0)
+        SEAdat[column+'_median'] = np.concatenate([p1median,p2median], axis=0)
+        SEAdat[column+'_low_q'] = np.concatenate([p1lq,p2lq], axis=0)
+        SEAdat[column+'_up_q'] = np.concatenate([p1uq,p2uq],axis=0)
+        SEAdat[column+'_cnt'] = np.concatenate([p1c,p2c],axis=0)
 
     SEAdat = SEAdat.set_index('t_norm')
 
-    return SEAdat
+    if isinstance(cols,str):
+        cols = [cols]
+
+    return SEAdat, cols
 
 
 # load the data from local file
 omnidata = pd.read_pickle('D:/data/SEAnorm/omnidata')
 
 # select a single parameter for the SEA
-data = omnidata['SymH']  # this MUST be a pandas Series for the 1D SEA to work
+data = omnidata[['SymH','AE']]  # this MUST be a pandas Series for the 1D SEA to work
 
 # load the event list
 stormlist = pd.read_csv('D:/data/SEAnorm/StormList_short.txt', index_col=0, parse_dates=[1, 2, 3, 4])
@@ -177,19 +184,22 @@ events=[starts, epochs, ends]
 statistic=np.nanmean
 
 # specify the number of bins in phase 1 and phase 2 as [nbins1, nbins2]
-bins=[25, 100]
+bins=[5, 50]
 
 # call the function
-SEAarray = SEAnorm1D(data, events, statistic, bins)
+SEAarray, cols = SEAnorm1D(data, events, bins)
 
-# plot the result
-plt.plot(SEAarray['mean'])
-plt.xlabel('Normalised Time Units')
-plt.ylabel('Sym-H')
-plt.title('New')
-plt.show()
+fig, axes = plt.subplots(nrows=len(cols))
 
-SEAarray.plot()
+for c, ax in zip(cols, axes):
+    print(c)
+    mask = SEAarray.columns.str.startswith(c) & ~SEAarray.columns.str.endswith('cnt')
+    SEAarray.loc[:,mask].plot(ax=ax)
+    
+SEAarray.plot(y='SymH_mean')
+
+
+
 
 
 
