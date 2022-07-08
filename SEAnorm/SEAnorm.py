@@ -104,7 +104,7 @@ def SEAnorm(data, events, statistic, x_dimensions, y_dimensions='none'):
 
         # concatenate phases to make final superposed epoch analysis
         SEAarray = np.concatenate((p1, p2), axis=0)
-        SEAarray = np.flip(np.swapaxes(SEAarray, 0, 1), 0)
+        SEAarray = np.swapaxes(SEAarray, 0, 1)
     elif isinstance(data, pd.core.series.Series)==True:  # 1D SEA
         starts, epochs, ends = events
         x1_spacing, x2_spacing = 1/x_dimensions[0], 1/x_dimensions[1]
