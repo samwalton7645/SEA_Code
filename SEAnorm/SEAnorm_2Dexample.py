@@ -16,7 +16,7 @@ from SEAnorm import SEAnorm
 
 
 # load the data from local file
-data = pd.read_pickle('sampexflux')  # this MUST be a pandas DataFrame for the 2D SEA to work
+data = pd.read_pickle('D:/data/SEAnorm/sampexflux')  # this MUST be a pandas DataFrame for the 2D SEA to work
                                      # first column must contain the data being analysed
                                      # second column must contain the y-axis data
 
@@ -25,7 +25,7 @@ logdata=data.copy()
 logdata.iloc[:, 0]=np.log10(data.iloc[:, 0])
 
 # load the event list
-stormlist = pd.read_csv('WGStormList.txt', index_col=0, parse_dates=[1, 2, 3, 4])
+stormlist = pd.read_csv('D:/data/SEAnorm/StormList_short.txt', index_col=0, parse_dates=[1, 2, 3, 4])
 stormlist = stormlist.reset_index(drop=True)
 
 # place into correct format to be used in SEAnorm
