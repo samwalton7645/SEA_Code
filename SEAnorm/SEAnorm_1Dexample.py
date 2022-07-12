@@ -6,23 +6,20 @@
 #    Journal of Geophysical Research: Space Physics, 124, 5828– 5847.
 #    https://doi.org/10.1029/2019JA026816
 
-from tqdm import tqdm
 import numpy as np
 import pandas as pd
-from scipy import stats
 import matplotlib.pylab as plt
-import gc
 from SEAnorm import SEAnorm
 
 
 # load the data from local file
-omnidata = pd.read_pickle('omnidata')
+omnidata = pd.read_pickle('D:/data/SEAnorm/omnidata')
 
 # select a single parameter for the SEA
 data = omnidata['SymH']  # this MUST be a pandas Series for the 1D SEA to work
 
 # load the event list
-stormlist = pd.read_csv('WGStormList.txt', index_col=0, parse_dates=[1, 2, 3, 4])
+stormlist = pd.read_csv('D:/data/SEAnorm/StormList_short.txt', index_col=0, parse_dates=[1, 2, 3, 4])
 stormlist = stormlist.reset_index(drop=True)
 
 # place into correct format to be used in SEAnorm
@@ -45,4 +42,5 @@ SEAarray = SEAnorm(data, events, statistic, bins)
 plt.plot(SEAarray)
 plt.xlabel('Normalised Time Units')
 plt.ylabel('Sym-H')
+plt.title('Original')
 plt.show()
