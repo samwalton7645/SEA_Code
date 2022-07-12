@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 
-This module supports a 1D normalized superposed epoch analysis 
-of time series data stored in a Pandas DataFrame.
+This module supports a 1D (e.g., time) and 2D (e.g., time and space)
+normalized superposed epoch analysis of time series data stored in a 
+Pandas DataFrame. 
 
 For the time normalization to work the DataFrame index must
 be a datetime index. 
@@ -16,7 +17,13 @@ The normalized time is then used to bin the data (DataFrame columns) and
 calculate typical statistics for each bin (median, mean, upper and lower
 quartile, and counts) for each phase. 
 
-The data is then returned as a normalized superposed epoch time series.
+If performing a 2D analysis, then one of the columns of the DataFrame must
+be a second axis to bin along. The column name must be passed as y_col and
+binning parameters must be passed as a list with the min and max value and
+spacing to define the bin edges.
+
+The data is then returned as a normalized superposed epoch time series along
+with a dictionary of metadata that can be used for plotting and reference.
 
 """
 
@@ -31,6 +38,11 @@ import timeit
 
 def SEAnorm1D(data, events, x_dimensions, cols=False, seastats=False,
               y_col=False, y_dimensions=False):
+    
+    
+    
+    
+    
     """
     Performs a normalized superposed epoch analysis of the time series
     contained in a DataFrame
@@ -210,8 +222,10 @@ def SEAnorm1D(data, events, x_dimensions, cols=False, seastats=False,
     if y_col and y_dimensions:
         ymin, ymax, y_spacing = y_dimensions
         y_edges = np.arange(ymin, ymax + y_spacing, y_spacing)
+        sea2d = True
     else:
         sea2d = False
+
     
     # create normalized time axis
     t_norm = (x1bins-x1bins.max()-x1_spacing)/x1_spacing
@@ -228,24 +242,31 @@ def SEAnorm1D(data, events, x_dimensions, cols=False, seastats=False,
     ph1list = [p1data[x] for x in cols]
     ph2list = [p2data[x] for x in cols]
     
-    stop = True
-    
     # loop over the stat values that 
     # need to be calculated and calculate
     # them for each column from ph1/ph2list
     for s_name, s_fun in stat_vals.items():
         # 2D superposed epoch analysis
         if sea2d:
-            p1stat, _, _, _ = stats.binned_statistic_2d(p1data['t_norm'], 
+            p1stat, _, y1_v, _ = stats.binned_statistic_2d(p1data['t_norm'], 
                                                         p1data[y_col], 
                                                         values=ph1list, 
                                                         bins=[x1_edges, y_edges], 
                                                         statistic=s_fun)
-            p2stat, _, _, _ = stats.binned_statistic_2d(p2data['t_norm'], 
+            p2stat, _, y2_v, _ = stats.binned_statistic_2d(p2data['t_norm'], 
                                                         p2data[y_col], 
                                                         values=ph2list, 
-                                                        bins=[x1_edges, y_edges], 
+                                                        bins=[x2_edges, y_edges], 
                                                         statistic=s_fun)
+            #loop over the columns and ybins
+            #to fill DataFrame
+            for i in np.arange(p1stat.shape[0]):
+                for j in np.arange(p1stat.shape[2]):
+                    
+                    
+                    SEAdat[cols[i]+'_'+s_name+f'_{j:03d}'] = \
+                       np.concatenate([p1stat[i,:,j],p2stat[i,:,j]], axis=0)
+                               
         # 1D superposed epoch analysis
         else:
             p1stat, _, _ = stats.binned_statistic(p1data['t_norm'],
@@ -255,11 +276,11 @@ def SEAnorm1D(data, events, x_dimensions, cols=False, seastats=False,
                                               values=ph2list,
                                               bins=x2_edges, statistic=s_fun)
 
-        # loop over the columns and add the superposed
-        # data to the returned DataFrame
-        for p1_col, p2_col, c, in zip(p1stat, p2stat, cols):
-            
-            SEAdat[c+'_'+s_name] = np.concatenate([p1_col,p2_col], axis=0)
+            # loop over the columns and add the superposed
+            # data to the returned DataFrame
+            for p1_col, p2_col, c, in zip(p1stat, p2stat, cols):
+                
+                SEAdat[c+'_'+s_name] = np.concatenate([p1_col,p2_col], axis=0)
             
     
     #set t_norm as the index
@@ -267,15 +288,22 @@ def SEAnorm1D(data, events, x_dimensions, cols=False, seastats=False,
     
     if isinstance(cols,str):
         cols = [cols]
-
-    return SEAdat, cols
+    
+    # pass back y axis information
+    if sea2d:
+        y_rtn = {'min':ymin, 'max':ymax, 'bin':y_spacing, 'edges':y_edges}
+        meta = {'sea_cols':cols, 'stats':stat_vals, 'y_meta':y_rtn}
+    else:
+        meta = {'sea_cols':cols, 'stats':stat_vals, 'y_meta':False}
+    
+    return SEAdat, meta
 
 
 # load the data from local file
-omnidata = pd.read_pickle('D:/data/SEAnorm/omnidata')
+#omnidata = pd.read_pickle('D:/data/SEAnorm/omnidata')
 
 # select a single parameter for the SEA
-data = omnidata[['V','P','B_Z_GSE','SymH','AE']]  
+#data = omnidata[['V','P','B_Z_GSE','SymH','AE']]  
 
 # load the event list
 stormlist = pd.read_csv('D:/data/SEAnorm/StormList_short.txt', index_col=0, 
@@ -302,22 +330,56 @@ p90 = lambda stat: np.nanpercentile(stat, 90)
 #                           seastats={'test':np.nanmin, 'p90':p90})
 
 
-SEAarray, cols = SEAnorm1D(data, events, bins)
-fig, axes = plt.subplots(nrows=len(cols), sharex=True, 
-                         squeeze=True,figsize=(5,8))
+# SEAarray, cols = SEAnorm1D(data, events, bins)
+# fig, axes = plt.subplots(nrows=len(cols), sharex=True, 
+#                          squeeze=True,figsize=(5,8))
 
-for c, ax in zip(cols, axes):
-    print(c)
-    mask = SEAarray.columns.str.startswith(c) & \
-        ~SEAarray.columns.str.endswith('cnt')
-    SEAarray.loc[:,mask].plot(ax=ax, style=['r-','b-','b--','b--'], 
-                              xlabel='Normalized Time',
-                              ylabel=c.replace('_',' '), 
-                              legend=False, fontsize=8)
+# for c, ax in zip(cols, axes):
+#     print(c)
+#     mask = SEAarray.columns.str.startswith(c) & \
+#         ~SEAarray.columns.str.endswith('cnt')
+#     SEAarray.loc[:,mask].plot(ax=ax, style=['r-','b-','b--','b--'], 
+#                               xlabel='Normalized Time',
+#                               ylabel=c.replace('_',' '), 
+#                               legend=False, fontsize=8)
+
+
+#2D testing
+
+data = pd.read_pickle('D:/data/SEAnorm/sampexflux')  # this MUST be a pandas DataFrame for the 2D SEA to work
+                                     # first column must contain the data being analysed
+                                     # second column must contain the y-axis data
+
+# if the desired analysis is of logged data, create the logged data before calling the function
+logdata=data.copy()
+logdata.iloc[:, 0]=np.log10(data.iloc[:, 0])
+
+# specify the number of bins in phase 1 and phase 2 as [nbins1, nbins2]
+bins=[5, 50]
+
+# specify the y-dimensions of the SEA
+ymin = 2.5
+ymax = 5.5
+y_spacing = 0.2
+y_dim = [ymin, ymax, y_spacing]
+
+sea2d, meta =  SEAnorm1D(logdata, events, bins, cols=['ELO'], 
+                         seastats={'mean':np.nanmean}, 
+                         y_col='L',y_dimensions=y_dim)
     
+yy = meta['y_meta']
 
+# plot the result
+im=plt.imshow(sea2d.to_numpy().transpose(), cmap='inferno', 
+              origin='lower', aspect='auto', 
+              extent =[sea2d.index.min(),sea2d.index.max(),min(yy['edges']),max(yy['edges'])] )
+plt.xlabel('Normalised Time Units')
+plt.ylabel('L-Shell')
 
-
+# add a colour bar
+cb=plt.colorbar(im)
+cb.ax.set_ylabel('log(flux)')
+plt.show()
 
 
 
