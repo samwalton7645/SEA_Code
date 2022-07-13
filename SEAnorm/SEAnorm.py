@@ -146,7 +146,7 @@ def SEAnorm(data, events, x_dimensions, cols=False, seastats=False,
         uq_nan = lambda stat: np.nanpercentile(stat, 75)
     
         stat_vals = {'mean':np.nanmean, 'median':np.nanmedian, 
-                     'low_q':lq_nan, 'up_q':uq_nan, 'cnt':'count'}
+                     'lowq':lq_nan, 'upq':uq_nan, 'cnt':'count'}
     
     # number of events for reference later on
     gc.collect()
