@@ -2,7 +2,10 @@
 """
 
 Example usage of SEAnorm to perfrom 1D normalized superposed epoch analysis on 
-solar wind omni data using the WGStormList.txt
+solar wind omni data using the WGStormList.txt.
+
+Plots the median, mean, upper and lower quartiles for each variable within the 
+loaded data frame.
 
 
 WGStormList.txt storm list is generated using the algorithm described in 
