@@ -33,14 +33,9 @@ import pandas as pd
 from scipy import stats
 import gc
 
-import matplotlib.pylab as plt
-import timeit
 
-def SEAnorm1D(data, events, x_dimensions, cols=False, seastats=False,
+def SEAnorm(data, events, x_dimensions, cols=False, seastats=False,
               y_col=False, y_dimensions=False):
-    
-    
-    
     
     
     """
@@ -297,3 +292,6 @@ def SEAnorm1D(data, events, x_dimensions, cols=False, seastats=False,
         meta = {'sea_cols':cols, 'stats':stat_vals, 'y_meta':False}
     
     return SEAdat, meta
+
+
+
