@@ -6,12 +6,15 @@ normalized superposed epoch analysis of time series data stored in a
 Pandas DataFrame. 
 
 For the time normalization to work the DataFrame index must
-be a datetime index. 
+be a datetime type index. 
 
 Each event is seperated into two phases, phase 1 and phase 2,
 seperated by 3 epochs, t0, t1, t2 (or start, epoch, end).
+    Phase 1: t0->t1
+    Phase 2: t1->t2
 
-Each phase is normalized from 0-1 depending on the passed x_dimensions.
+Each phase is normalized from 0-1 and then binned based on the passed 
+x_dimensions.
 
 The normalized time is then used to bin the data (DataFrame columns) and
 calculate typical statistics for each bin (median, mean, upper and lower
@@ -20,7 +23,7 @@ quartile, and counts) for each phase.
 If performing a 2D analysis, then one of the columns of the DataFrame must
 be a second axis to bin along. The column name must be passed as y_col and
 binning parameters must be passed as a list with the min and max value and
-spacing to define the bin edges.
+spacing to define the bin edges via y_dimensions.
 
 The data is then returned as a normalized superposed epoch time series along
 with a dictionary of metadata that can be used for plotting and reference.
@@ -38,7 +41,6 @@ def SEAnorm(data, events, x_dimensions, cols=False, seastats=False,
               y_col=False, y_dimensions=False):
     """
     
-
     Parameters
     ----------
     data : Pandas DataFrame
