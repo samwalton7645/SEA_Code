@@ -98,6 +98,9 @@ for c, ax in zip(cols, axes):
     # a more complex mask would need to be used if multiple
     # statistics where returned    
     mask = sea2d.columns.str.startswith(c) 
+    
+    # plot the data from the mask
+    # transform to a 2D numpy array and transpopse for plotting
     hb = ax.imshow(sea2d.loc[:,mask].to_numpy().transpose(), cmap='inferno', 
               origin='lower', aspect='auto', 
               extent =[sea2d.index.min(),sea2d.index.max(),
