@@ -37,7 +37,6 @@ bins=[20, 120]
 # columns to run analysis on
 omnidata = pd.read_hdf('D:/data/SEAnorm/omnidata.hdf')
  
-
 # load the event list and place the
 # epoch times into the appropriate format
 stormlist = pd.read_csv('D:/data/SEAnorm/StormList_short.txt', index_col=0, 
