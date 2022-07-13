@@ -36,66 +36,89 @@ import gc
 
 def SEAnorm(data, events, x_dimensions, cols=False, seastats=False,
               y_col=False, y_dimensions=False):
-    
-    
     """
-    Performs a normalized superposed epoch analysis of the time series
-    contained in a DataFrame
+    
 
     Parameters
     ----------
-    data : TYPE
-        DESCRIPTION.
-    events : TYPE
-        DESCRIPTION.
-    x_dimensions : TYPE
-        DESCRIPTION.
-    cols : TYPE, optional
-        DESCRIPTION. The default is False.
-    seastats : TYPE, optional
-        DESCRIPTION. The default is False.
+    data : Pandas DataFrame
+        Contains the data with which to perform the normalized SEA on.
+        Must have datatime like index.
+    events : list
+        List of three arrays/lists [t0, t1, t2] containing the start (t0), 
+        epoch (t1) and end times (t2) of each event.
+        Phase 1 is defined to be between t0 and t1
+        Phase 2 is defined to be between t1 and t2
+    x_dimensions : list
+        list [x1, x2] containing two elements specifying the desired number of 
+        normalised time bins in [phase 1, phase 2].
+        e.g., for each event Phase 1 (t0->t1) is normalized to 0->1 and then
+        divied in x1 number of bins.
+    cols : list or str, optional
+        List of column names to run the superposed epoch analysis on. 
+        The default is False.
+    seastats : dict, optional
+        Dictionary defining the statistics to be used for the superposed epoch 
+        analysis via the scipy.binned_statistic function.
+             - format is {'stat_name':stat_function}
+             - stat_function can be a string, e.g. as defined in 
+             scipy.stats.binned_statistic( ), a callable, e.g., np.nanmean, 
+             or a lambda defined callable e.g., the 90th percental
+             p90 = lambda stat: np.nanpercentile(stat, 90)
+              
+             To call all three in the above example the seastat dictionary
+             could be organized as:
+         
+             stats = {'mean':'mean','namean':np.mean,'p90':p90}
+         
+         Recommended to use numpy functions as they can handle NaN better then
+         the builtin scipy.stats.binned_statistic( ) statistics.
+         
+         The default is False, which will return the default statistics:
+             are mean, median, upper and lower quartile
+    y_col : list, optional
+        Column to be used as the second dimension for a 2D normalized
+        superposed epoch analysis. 
+        y_col must be a column in `data` DataFrame.
+        The default is False.
+    y_dimensions : list, optional
+        list [y min, y max, y spacing] containing three elements specifying the
+        min, max, and bin spacing for binning the second dimesion 'y_col' when
+        performing a 2D analysis.
+        The default is False.
+        
+    Both y_col and y_dimension must be set to perform a 2D normalized 
+    superposed epoch anlysis, e.g., in time and space (L-shell or MLT). 
 
     Returns
     -------
-    SEAdat : TYPE
-        DESCRIPTION.
-    cols : TYPE
-        DESCRIPTION.
-
-
-    
-    Parameters:
-    -----------
-    data - Pandas DataFrame containing the time series to be used.
-         - Must have a Pandas datetime index
-    events - list of three arrays [t0, t1, t2] containing the start (t0), 
-        epoch (t1) and end times (t2) of each event
-           - times must either be timestamps or strings 
-        in the format: 'YYYY-MM-DD HH:MM:SS'
-           - phase 1 is defined from t0->t1 (start to epoch)
-           - phase 2 is defined from t1->t2 (epoch to end)
-    x_dimensions - list [x, y] containing two elements: the desired number of 
-        normalised time bins in [phase 1, phase 2]
-    cols - list of column names to run the superposed epoch analysis on
-    seastats - dictionary ofstatistics to be used for superposed epoch analysis 
-         via the scipy.binned_statistic function. 
-             - default is mean, median, upper and lower quartile 
-             - stat_function can be a string, e.g. as defined in 
-         scipy.stats. binned_statistic, a callable, e.g., np.nanmean, 
-         or a lambda defined callable e.g., the 90th percental
-         p90 = lambda stat: np.nanpercentile(stat, 90)
-         
-         To call all three the dictionary could be organized as 
-         
-         stats = {'mean':'mean','namean':np.mean,'p90':p90}
-         
-         Recommended to use numpy function as they can handle NaN better then
-         the builtin scipy.stats.binned_statistic built in statistics
+    SEAdat : Pandas DataFrame
+        Returned Superposed epoch analysis for each of the columns in data or
+        columns defined by cols and for each statistic defined by seastats or
+        the default statistics.
         
-
-    Returns:
-    --------
-    Pandas DataFrame containing the final time-normalised superposed epoch analysis.
+        If a 2D analysis was performed then each of cols and seastat will be
+        further subdived by the number of bins for the second dimension.
+                                                                        
+    meta : dict
+        Metadata returned for the analysis.
+        Dictionary Keys:
+        sea_cols - columns from data that the analysis was performed on
+        stats - dictionary defining the statistics that were calculated. Keys
+            specify the name of the statistic and values specify the function. 
+            See seastats parameter
+        y_meta - Metadata for 2D analysis. 
+            False if only 1D analysis was performed.
+            dict if 2D analysis was performed. 
+            Dictionary Keys:
+            min - min value of second dimension defined in y_dimensions
+            max - max value of second dimension defined in y_dimensions
+            bin - bin value of second dimension defined in y_dimensions
+            edges - edges of bins used in scipy.stats.binned_statistic2d( )
+            
+            y_rtn = {'min':ymin, 'max':ymax, 'bin':y_spacing, 'edges':y_edges}
+            meta = {'sea_cols':cols, 'stats':stat_vals, 'y_meta':y_rtn}
+            
     """
 
     # get the required epochs from the event list    
