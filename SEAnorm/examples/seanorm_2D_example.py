@@ -39,6 +39,9 @@ sys.path.append('../')
 from SEAnorm import SEAnorm
 
 
+# file location for sampex data
+s_dat = 'https://zenodo.org/record/6835641/files/sampexflux.csv.bz2'
+
 # set the columns to run the analysis on
 sea_cols = ['ELO','EHI']
 
@@ -56,7 +59,10 @@ y_dim = [ymin, ymax, y_spacing]
 seastats = {'median':np.nanmedian}
 
 # load the sampex data to analyzed into a DataFrame
-sampexdata = pd.read_hdf('D:/data/SEAnorm/sampexflux.hdf')
+sampexdata = pd.read_csv(s_dat,parse_dates=True, 
+                       infer_datetime_format=True, header=0, 
+                       names=['t','ELO','EHI','L'],
+                       index_col=0)
 
 # log the sampex data before performing SEA
 # replace infinity values with nan to properly 
@@ -89,7 +95,7 @@ cols = meta['sea_cols']
 ymeta = meta['y_meta']
 
 fig, axes = plt.subplots(nrows=len(cols), sharex=True, 
-                         squeeze=True,figsize=(5,8))
+                         squeeze=True,figsize=(5,3.5))
 
 # loop over columns that were analyzed
 for c, ax in zip(cols, axes):
