@@ -27,6 +27,9 @@ sys.path.append('../')
 
 from SEAnorm import SEAnorm
 
+# file location for omnidata
+o_dat='https://zenodo.org/record/6835641/files/omnidata.csv.bz2'
+
 # set the columns to run the analysis on
 sea_cols = ['V','P','B_Z_GSE','SymH','AE']
 
@@ -35,8 +38,13 @@ bins=[20, 120]
 
 # load omni data and select 
 # columns to run analysis on
-omnidata = pd.read_hdf('D:/data/SEAnorm/omnidata.hdf')
- 
+omnidata = pd.read_csv(o_dat,parse_dates=True, 
+                       infer_datetime_format=True, header=0, 
+                       names=['t','B_Z_GSE','V','P','AE','SymH'],
+                       index_col=0)
+
+
+
 # load the event list and place the
 # epoch times into the appropriate format
 stormlist = pd.read_csv('D:/data/SEAnorm/StormList_short.txt', index_col=0, 

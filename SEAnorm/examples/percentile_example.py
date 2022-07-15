@@ -52,6 +52,8 @@ seastats = {}
 for x in np.arange(10,100,10):
     seastats[f'{x}th_%tile'] = makepercentile(x)
 
+# file location for omnidata
+o_dat='https://zenodo.org/record/6835641/files/omnidata.csv.bz2'
 
 # set the columns to run the analysis on
 sea_cols = ['V']
@@ -63,7 +65,10 @@ bins=[20, 120]
 
 # load omni data and select 
 # columns to run analysis on
-omnidata = pd.read_hdf('D:/data/SEAnorm/omnidata.hdf')
+omnidata = pd.read_csv(o_dat,parse_dates=True, 
+                       infer_datetime_format=True, header=0, 
+                       names=['t','B_Z_GSE','V','P','AE','SymH'],
+                       index_col=0)
  
 # load the event list and place the
 # epoch times into the appropriate format
@@ -84,24 +89,32 @@ SEAarray, meta = SEAnorm(omnidata, events, bins, cols=sea_cols,
 fig = plt.figure()
 ax = plt.subplot(111)
 
-# plot the DataFrame
-SEAarray.plot(ax=ax, ylabel=sea_cols[0], xlabel='Normalized Time', 
-              title='Storm-time Solar Wind Velocity Percentiles')                        
-
-# make better legend labels
+# get column names for labesl and for setting colors
 cols = SEAarray.columns.values.tolist()
-lab_col = []
 
+# setup some colors
+colors = plt.cm.plasma(np.linspace(0,1,len(cols)))
+
+# make better legend labels from the column names
+lab_col = []
 for cc in cols:
     lab_col.append(cc[2:].replace('_',' '))
 
+# plot the DataFrame
+SEAarray.plot(ax=ax, ylabel=sea_cols[0], xlabel='Normalized Time', 
+              title='Storm-time Solar Wind Velocity Percentiles', 
+              color=colors)                        
 
 # shrink current axis by 20% for the new axis
 box = ax.get_position()
 ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
 # place the legend to the right of the current axis
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), labels=lab_col)
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5),
+          labels=lab_col, facecolor='silver')
+
+# change background color so it's easier to see
+ax.set_facecolor('silver')
 
 plt.show()
 
