@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setup(name='SEAnorm',
+setup(name='sea_norm',
       version='1.0.0',
       description='Time normalized superposed epoch analysis (1D and 2D)',
       author='Sam Walton, Kyle Murphy',

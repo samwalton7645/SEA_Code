@@ -26,17 +26,16 @@ Walach and Grocott (2019):
     driving. Journal of Geophysical Research: Space Physics, 124, 5828– 5847.
     https://doi.org/10.1029/2019JA026816
 
+StormList_short.txt is the same stormlist but truncated to the time range
+where there is data.
+
 """
 
 import numpy as np
 import pandas as pd
 import matplotlib.pylab as plt
 
-# remove below once we've installed
-import sys
-sys.path.append('../')
-
-from SEAnorm import SEAnorm
+from sea_norm import sean
 
 
 # file location for sampex data
@@ -60,9 +59,9 @@ seastats = {'median':np.nanmedian}
 
 # load the sampex data to analyzed into a DataFrame
 sampexdata = pd.read_csv(s_dat,parse_dates=True, 
-                       infer_datetime_format=True, header=0, 
-                       names=['t','ELO','EHI','L'],
-                       index_col=0)
+                        infer_datetime_format=True, header=0, 
+                        names=['t','ELO','EHI','L'],
+                        index_col=0)
 
 # log the sampex data before performing SEA
 # replace infinity values with nan to properly 
@@ -73,7 +72,7 @@ logdata.replace([np.inf, -np.inf], np.nan, inplace=True)
 
 # load the event list and place the
 # epoch times into the appropriate format
-stormlist = pd.read_csv('D:/data/SEAnorm/StormList_short.txt', index_col=0, 
+stormlist = pd.read_csv('StormList_short.txt', index_col=0, 
                         parse_dates=[1, 2, 3, 4])
 stormlist = stormlist.reset_index(drop=True)
 
@@ -83,7 +82,7 @@ ends = stormlist.REnd
 events=[starts, epochs, ends]
 
 # perform the 2D SEA analysis
-sea2d, meta =  SEAnorm(logdata, events, bins, cols=sea_cols, 
+sea2d, meta =  sean(logdata, events, bins, cols=sea_cols, 
                          seastats=seastats, 
                          y_col=y_col,y_dimensions=y_dim)
 
