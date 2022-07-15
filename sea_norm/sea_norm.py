@@ -37,7 +37,7 @@ from scipy import stats
 import gc
 
 
-def SEAnorm(data, events, x_dimensions, cols=False, seastats=False,
+def sean(data, events, x_dimensions, cols=False, seastats=False,
               y_col=False, y_dimensions=False):
     """
     

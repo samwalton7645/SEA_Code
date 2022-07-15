@@ -24,7 +24,7 @@ import matplotlib.pylab as plt
 import sys
 sys.path.append('../')
 
-from SEAnorm import SEAnorm
+from sea_norm import sean
 
 # define a function that will return a lambda
 # percentile function
@@ -66,9 +66,11 @@ bins=[20, 120]
 # load omni data and select 
 # columns to run analysis on
 omnidata = pd.read_csv(o_dat,parse_dates=True, 
-                       infer_datetime_format=True, header=0, 
-                       names=['t','B_Z_GSE','V','P','AE','SymH'],
-                       index_col=0)
+                        infer_datetime_format=True, header=0, 
+                        names=['t','B_Z_GSE','V','P','AE','SymH'],
+                        index_col=0)
+
+
  
 # load the event list and place the
 # epoch times into the appropriate format
@@ -82,7 +84,7 @@ ends = stormlist.REnd
 events=[starts, epochs, ends]
 
 # perform the noramlized superposed epoch analysis
-SEAarray, meta = SEAnorm(omnidata, events, bins, cols=sea_cols, 
+SEAarray, meta = sean(omnidata, events, bins, cols=sea_cols, 
                          seastats=seastats)
 
 # set up plotting

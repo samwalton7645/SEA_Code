@@ -32,11 +32,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pylab as plt
 
-# remove below once we've installed
-import sys
-sys.path.append('../')
-
-from SEAnorm import SEAnorm
+from sea_norm import sean
 
 
 # file location for sampex data
@@ -60,9 +56,9 @@ seastats = {'median':np.nanmedian}
 
 # load the sampex data to analyzed into a DataFrame
 sampexdata = pd.read_csv(s_dat,parse_dates=True, 
-                       infer_datetime_format=True, header=0, 
-                       names=['t','ELO','EHI','L'],
-                       index_col=0)
+                        infer_datetime_format=True, header=0, 
+                        names=['t','ELO','EHI','L'],
+                        index_col=0)
 
 # log the sampex data before performing SEA
 # replace infinity values with nan to properly 
@@ -83,7 +79,7 @@ ends = stormlist.REnd
 events=[starts, epochs, ends]
 
 # perform the 2D SEA analysis
-sea2d, meta =  SEAnorm(logdata, events, bins, cols=sea_cols, 
+sea2d, meta =  sean(logdata, events, bins, cols=sea_cols, 
                          seastats=seastats, 
                          y_col=y_col,y_dimensions=y_dim)
 
