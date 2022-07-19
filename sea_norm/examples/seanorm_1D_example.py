@@ -90,10 +90,4 @@ for c, ax in zip(cols, axes):
                               ylabel=c.replace('_',' '), 
                               legend=False, fontsize=8)
 
-
-
-
-
-
-
 plt.show()
