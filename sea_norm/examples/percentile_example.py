@@ -64,7 +64,7 @@ sea_cols = ['V']
 # specify the number of bins in phase 1 and phase 2 as [nbins1, nbins2]
 bins=[20, 120]
 
-# define a set of labda functions that will be used 
+# define a set of lambda functions that will be used
 
 # load omni data and select 
 # columns to run analysis on
