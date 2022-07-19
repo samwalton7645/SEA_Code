@@ -95,3 +95,5 @@ for c, ax in zip(cols, axes):
 
 
 
+
+plt.show()
