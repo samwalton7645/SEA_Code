@@ -23,11 +23,6 @@ where there is data.
 
 import pandas as pd
 import matplotlib.pylab as plt
-
-# remove below once we've installed
-# import sys
-# sys.path.append('../')
-
 from sea_norm import sean
 
 # file location for omnidata
