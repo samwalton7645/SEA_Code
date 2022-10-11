@@ -22,7 +22,7 @@ where there is data.
 
 
 import pandas as pd
-import matplotlib.pylab as plt
+import matplotlib.pyplot as plt
 from sea_norm import sean
 
 # file location for omnidata
