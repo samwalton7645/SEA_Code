@@ -33,7 +33,7 @@ where there is data.
 
 import numpy as np
 import pandas as pd
-import matplotlib.pylab as plt
+import matplotlib.pyplot as plt
 from sea_norm import sean
 
 
