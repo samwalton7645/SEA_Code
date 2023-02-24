@@ -130,6 +130,9 @@ def sean(data, events, x_dimensions, cols=False, seastats=False,
     # each phase is normalized to 1 and then binned based on the
     # spacing and bin sizes defined by x_dimensions
     x1_spacing, x2_spacing = 1/x_dimensions[0], 1/x_dimensions[1]
+    
+    x1_bin = np.int(x_dimensions[0])
+    x2_bin = np.int(x_dimensions[1])    
 
     # if a series is passed convert it to a data frame for simplicity 
     if isinstance(data, pd.Series):
@@ -233,10 +236,16 @@ def sean(data, events, x_dimensions, cols=False, seastats=False,
     
     # create bins and edges in normalized 
     # time for binning the data in both phases
-    x1bins = np.arange(0, 1, x1_spacing)
-    x1_edges = np.arange(0, 1 + x1_spacing, x1_spacing)
-    x2bins = np.arange(0, 1, x2_spacing)
-    x2_edges = np.arange(0, 1 + x2_spacing, x2_spacing)
+    x1_edges = np.linspace(0,1,x1_bin)
+    x2_edges = np.linspace(0,1,x2_bin)
+    
+    x1bins = x1_edges[0:-1]
+    x2bins = x2_edges[0:-1]
+    
+    #x1bins = np.arange(0, 1., x1_spacing)
+    #x1_edges = np.arange(0, 1. + x1_spacing, x1_spacing)
+    #x2bins = np.arange(0, 1., x2_spacing)
+    #x2_edges = np.arange(0, 1. + x2_spacing, x2_spacing)
     
     # if calculating 2D SEA then calculate the y bins
     if y_col and y_dimensions:
